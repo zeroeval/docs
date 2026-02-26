@@ -1,0 +1,62 @@
+---
+title: "Versioning and Subsets"
+description: "Control dataset versions and subset selection for reproducible evals"
+---
+
+## Why versioning matters
+
+Reproducible evaluation depends on running against a known dataset snapshot. The SDK exposes version metadata after push and supports pulling a specific version.
+
+```python
+dataset.push()
+print(dataset.version_id)
+print(dataset.version_number)
+```
+
+To run against a known version:
+
+```python
+dataset = ze.Dataset.pull("capital-cities", version_number=3)
+```
+
+## Subset pulls
+
+If your dataset includes named subsets, pull only the subset you want:
+
+```python
+diamond = ze.Dataset.pull("gpqa", subset="diamond")
+print(len(diamond))
+```
+
+If `subset` is omitted, the SDK attempts default subset resolution based on dataset metadata.
+
+## Reproducibility checklist
+
+<Steps>
+  <Step title="Pin dataset version when benchmarking">
+    For benchmark comparisons over time, prefer `version_number` instead of always pulling latest.
+  </Step>
+  <Step title="Track subset in experiments">
+    Store subset name in run parameters for transparent reporting.
+  </Step>
+  <Step title="Use stable row identifiers">
+    Include deterministic `row_id` fields to make resume and row comparisons robust.
+  </Step>
+</Steps>
+
+## Recommended run metadata
+
+```python
+run = dataset.eval(
+    task_func=my_task,
+    parameters={
+        "dataset_name": dataset.name,
+        "dataset_version": dataset.version_number,
+        "subset": "diamond",
+    },
+)
+```
+
+<Tip>
+  Attach dataset version + subset in run `parameters` so dashboards and downstream analysis remain self-describing.
+</Tip>

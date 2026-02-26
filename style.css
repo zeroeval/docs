@@ -1,0 +1,15 @@
+#navbar {
+  backdrop-filter: blur(12px);
+}
+
+#sidebar {
+  border-right-color: transparent;
+}
+
+.dark #sidebar {
+  border-right-color: hsl(240 3.7% 15.9%);
+}
+
+.dark footer {
+  border-top-color: hsl(240 3.7% 15.9%);
+}

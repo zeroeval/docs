@@ -1,0 +1,90 @@
+---
+title: "Creating Datasets"
+description: "Create, mutate, and push datasets with the ZeroEval Python SDK"
+---
+
+## Create from Python data
+
+Use `ze.Dataset(name, data=[...])` when your rows already exist in memory.
+
+```python
+import zeroeval as ze
+
+ze.init()
+
+dataset = ze.Dataset(
+    "capital-cities",
+    data=[
+        {"row_id": "fr", "question": "Capital of France?", "answer": "Paris"},
+        {"row_id": "de", "question": "Capital of Germany?", "answer": "Berlin"},
+    ],
+    description="Simple geography dataset",
+)
+```
+
+<Tip>
+  Add a stable `row_id` field whenever possible. It makes resume behavior and row-level tracking much more reliable.
+</Tip>
+
+## Create from CSV
+
+You can initialize directly from a CSV path. The dataset name defaults to the CSV filename stem.
+
+```python
+import zeroeval as ze
+
+ze.init()
+
+dataset = ze.Dataset("/path/to/questions.csv")
+print(dataset.name)  # e.g. "questions"
+print(len(dataset))
+```
+
+## Modify rows before running evals
+
+The `Dataset` object supports in-memory row operations.
+
+```python
+# Add rows
+dataset.add_rows(
+    [{"row_id": "es", "question": "Capital of Spain?", "answer": "Madrid"}]
+)
+
+# Update one row by index
+dataset.update_row(
+    0,
+    {"question": "Capital city of France?", "answer": "Paris"},
+)
+
+# Delete a row by index
+dataset.delete_row(1)
+```
+
+<Warning>
+  Row updates by index can change row ordering and row content. Keep this in mind if your downstream logic assumes fixed order.
+</Warning>
+
+## Push to ZeroEval
+
+Push persists the dataset to the backend and refreshes local rows with backend metadata (including row IDs when available).
+
+```python
+dataset.push()
+print(dataset.version_id, dataset.version_number)
+```
+
+Use `create_new_version=True` if you explicitly want a new version on push:
+
+```python
+dataset.push(create_new_version=True)
+```
+
+## Validate shape quickly
+
+Useful helpers before running tasks:
+
+```python
+print(dataset.columns)  # sorted list of column names
+print(len(dataset))     # number of rows
+print(dataset[0])       # DotDict for first row
+```

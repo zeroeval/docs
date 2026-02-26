@@ -1,0 +1,57 @@
+---
+title: "Installation"
+description: "Install and initialize the ZeroEval Python SDK"
+---
+
+## Install the package
+
+```bash
+pip install zeroeval
+```
+
+Optional integrations:
+
+```bash
+pip install zeroeval[openai]
+pip install zeroeval[gemini]
+pip install zeroeval[langchain]
+pip install zeroeval[langgraph]
+pip install zeroeval[all]
+```
+
+## Configure authentication
+
+Set your API key in the environment:
+
+```bash
+export ZEROEVAL_API_KEY="sk_ze_..."
+```
+
+Or initialize directly in code:
+
+```python
+import zeroeval as ze
+ze.init(api_key="sk_ze_...")
+```
+
+## Optional configuration
+
+```python
+ze.init(
+    api_key="sk_ze_...",
+    api_url="https://api.zeroeval.com",
+    organization_name="my-org",
+    debug=False,
+)
+```
+
+## Verify setup
+
+```python
+import zeroeval as ze
+
+ze.init()
+dataset = ze.Dataset("setup-check", data=[{"row_id": "1", "value": "ok"}])
+dataset.push()
+print("SDK setup is working")
+```

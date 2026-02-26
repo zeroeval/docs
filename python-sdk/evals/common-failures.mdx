@@ -1,0 +1,77 @@
+---
+title: "Common Failures"
+description: "Debug frequent dataset and eval errors quickly"
+---
+
+## Initialization and auth
+
+<AccordionGroup>
+  <Accordion title="SDK not initialized" icon="triangle-exclamation">
+    Calls like `Dataset.push(...)` and `Dataset.pull(...)` require initialization.
+
+    ```python
+    import zeroeval as ze
+    ze.init(api_key="sk_ze_...")
+    ```
+  </Accordion>
+  <Accordion title="Missing API key" icon="key">
+    Set `ZEROEVAL_API_KEY` in your environment or pass `api_key` directly to `ze.init(...)`.
+  </Accordion>
+</AccordionGroup>
+
+## Task contract errors
+
+If a task is decorated with `@ze.task(outputs=["prediction"])`, it must return:
+
+- A dictionary
+- Including `prediction`
+
+```python
+@ze.task(outputs=["prediction"])
+def bad_task(row):
+    return "oops"  # invalid: must return dict
+```
+
+## Column mapping errors
+
+Evaluator args must map to real columns.
+
+```python
+run.score(
+    [exact_match],
+    column_map={"exact_match": {"answer_col": "answer_typo"}},  # invalid column
+)
+```
+
+The SDK validates mappings and raises clear errors for unknown columns.
+
+## Resume errors
+
+`skip_completed=True` requires stable row identity.
+
+```python
+# Good row schema for resume
+{"row_id": "r_42", "question": "...", "answer": "..."}
+```
+
+Without `row_id` (or `id`), row-level resume tracking cannot be guaranteed.
+
+## Reliability tuning
+
+Use these controls for flaky providers:
+
+```python
+execution = ze.ExecutionConfig(
+    workers=8,
+    timeout_s=30,
+    retry=ze.RetryPolicy(
+        max_attempts=4,
+        base_delay_s=1.0,
+        max_delay_s=20.0,
+    ),
+)
+```
+
+<Tip>
+  For production workloads, pair retries with checkpointing so partial progress is persisted during long runs.
+</Tip>

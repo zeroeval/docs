@@ -1,0 +1,70 @@
+---
+title: "Loading and Inspecting Datasets"
+description: "Pull datasets, iterate rows, and work with slices"
+---
+
+## Pull a dataset by name
+
+```python
+import zeroeval as ze
+
+ze.init()
+
+dataset = ze.Dataset.pull("capital-cities")
+print(dataset.name)
+print(len(dataset))
+```
+
+Optionally load a specific version number:
+
+```python
+dataset_v2 = ze.Dataset.pull("capital-cities", version_number=2)
+```
+
+## Iterate over rows
+
+Rows are yielded as `DotDict` objects, so both key and dot access are possible.
+
+```python
+for row in dataset:
+    print(row.question, row.answer)  # dot access
+```
+
+## Index and slice
+
+- `dataset[idx]` returns a single row (`DotDict`)
+- `dataset[start:end]` returns a new `Dataset` with copied rows
+
+```python
+first = dataset[0]
+top_100 = dataset[:100]
+
+print(type(first))    # DotDict
+print(type(top_100))  # Dataset
+```
+
+<Info>
+  Sliced datasets preserve backend metadata (dataset id/version/subset) when available, so they can still be evaluated and pushed in normal workflows.
+</Info>
+
+## Access columns and normalized data
+
+```python
+print(dataset.columns)  # union of all row keys (excluding internal row_id)
+print(dataset.data)     # row payloads without wrapper metadata
+```
+
+## Common loading errors
+
+<AccordionGroup>
+  <Accordion title="SDK not initialized" icon="triangle-exclamation">
+    `Dataset.pull(...)` requires a valid ZeroEval initialization.
+
+    ```python
+    ze.init(api_key="sk_ze_...")
+    ```
+  </Accordion>
+  <Accordion title="Dataset not found" icon="magnifying-glass">
+    Confirm dataset name and project context (API key/org mapping). Pull uses the project resolved from your API credentials.
+  </Accordion>
+</AccordionGroup>

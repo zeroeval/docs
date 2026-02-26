@@ -1,0 +1,82 @@
+---
+title: "Text Eval End-to-End"
+description: "A complete text evaluation workflow with row and column metrics"
+---
+
+## Goal
+
+Evaluate model predictions for a text QA task and compute accuracy.
+
+## Full example
+
+```python
+import zeroeval as ze
+
+ze.init()
+
+dataset = ze.Dataset(
+    "qa-text-e2e",
+    data=[
+        {"row_id": "1", "question": "Capital of France?", "answer": "Paris"},
+        {"row_id": "2", "question": "Capital of Germany?", "answer": "Berlin"},
+        {"row_id": "3", "question": "Capital of Japan?", "answer": "Tokyo"},
+    ],
+)
+dataset.push()
+
+@ze.task(outputs=["prediction"])
+def answer(row):
+    # Replace with provider call.
+    return {"prediction": row.answer}
+
+@ze.evaluation(mode="row", outputs=["exact_match"])
+def exact_match(row, answer_col, prediction_col):
+    return {"exact_match": int(answer_col == prediction_col)}
+
+@ze.evaluation(mode="column", outputs=["accuracy"])
+def accuracy(exact_match_col):
+    total = len(exact_match_col)
+    return {"accuracy": (sum(exact_match_col) / total) if total else 0.0}
+
+run = dataset.eval(
+    answer,
+    execution=ze.ExecutionConfig(
+        workers=8,
+        timeout_s=30,
+        retry=ze.RetryPolicy(max_attempts=3),
+    ),
+    checkpoint=ze.CheckpointConfig(flush_every_rows=50, flush_every_seconds=5.0),
+)
+
+run = run.score(
+    [exact_match, accuracy],
+    column_map={
+        "exact_match": {
+            "answer_col": "answer",
+            "prediction_col": "prediction",
+        },
+        "accuracy": {"exact_match_col": "exact_match"},
+    },
+)
+
+print("run_id:", run.run_id)
+print("metrics:", run.metrics)
+print("health:", run.health)
+```
+
+## Optional: repeat for uncertainty
+
+```python
+@ze.evaluation(mode="run", outputs=["accuracy_mean", "accuracy_n"])
+def accuracy_over_runs(all_runs):
+    vals = [r.metrics["accuracy"] for r in all_runs if "accuracy" in r.metrics]
+    return {
+        "accuracy_mean": (sum(vals) / len(vals)) if vals else 0.0,
+        "accuracy_n": len(vals),
+    }
+
+all_runs = run.repeat(5).to_list()
+aggregate = all_runs[0]
+aggregate.run_metrics([accuracy_over_runs], all_runs=all_runs)
+print(aggregate.metrics)
+```

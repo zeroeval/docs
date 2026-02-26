@@ -1,33 +1,38 @@
 ---
 title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+description: 'Reference context for the ZeroEval platform'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## About this section
 
-## Welcome
+This docs pass is focused on **Python SDK datasets and evals**.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+If you are implementing with the SDK, start here:
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+<CardGroup cols={2}>
+  <Card title="SDK installation" icon="download" href="/python-sdk/installation">
+    Install and initialize the Python SDK.
+  </Card>
+  <Card title="SDK quickstart" icon="rocket" href="/python-sdk/quickstart">
+    Run your first dataset + eval workflow end-to-end.
+  </Card>
+</CardGroup>
 
-## Authentication
+## Platform authentication model
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+The platform uses bearer token authentication. In SDK workflows, this is configured via:
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+```bash
+export ZEROEVAL_API_KEY="sk_ze_..."
 ```
+
+Or:
+
+```python
+import zeroeval as ze
+ze.init(api_key="sk_ze_...")
+```
+
+<Info>
+  A full HTTP API endpoint reference can be added in a dedicated future pass. This section currently serves as platform context while SDK docs are the primary path.
+</Info>

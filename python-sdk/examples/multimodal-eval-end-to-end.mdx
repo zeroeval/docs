@@ -1,0 +1,79 @@
+---
+title: "Multimodal Eval End-to-End"
+description: "Run a multimodal evaluation with image inputs and row-level scoring"
+---
+
+## Goal
+
+Create a multimodal dataset, run a vision-capable model task, and score result quality.
+
+## Full example
+
+```python
+import zeroeval as ze
+from openai import OpenAI
+
+ze.init()
+client = OpenAI()
+
+dataset = ze.Dataset(
+    "medical-xray-e2e",
+    data=[
+        {
+            "row_id": "p001",
+            "symptoms": "Dry cough and mild fever",
+            "expected_keywords": "pneumonia,opacity,infiltrate",
+        }
+    ],
+)
+dataset.add_image(0, "chest_xray", "./assets/p001.jpg")
+dataset.push()
+
+@ze.task(outputs=["diagnosis"])
+def diagnose(row):
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": f"Symptoms: {row.symptoms}"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": row.chest_xray},
+                    },
+                ],
+            }
+        ],
+    )
+    return {"diagnosis": response.choices[0].message.content}
+
+@ze.evaluation(mode="row", outputs=["contains_keyword"])
+def contains_keyword(row, diagnosis_col, expected_keywords_col):
+    keywords = [k.strip().lower() for k in expected_keywords_col.split(",") if k.strip()]
+    text = (diagnosis_col or "").lower()
+    return {"contains_keyword": int(any(k in text for k in keywords))}
+
+@ze.evaluation(mode="column", outputs=["keyword_hit_rate"])
+def keyword_hit_rate(contains_keyword_col):
+    n = len(contains_keyword_col)
+    return {"keyword_hit_rate": (sum(contains_keyword_col) / n) if n else 0.0}
+
+run = dataset.eval(diagnose, workers=2)
+run = run.score(
+    [contains_keyword, keyword_hit_rate],
+    column_map={
+        "contains_keyword": {
+            "diagnosis_col": "diagnosis",
+            "expected_keywords_col": "expected_keywords",
+        },
+        "keyword_hit_rate": {"contains_keyword_col": "contains_keyword"},
+    },
+)
+
+print(run.metrics)
+```
+
+<Warning>
+  Multimodal runs can be expensive and slow. Start with a tiny dataset and low worker count, then scale up.
+</Warning>

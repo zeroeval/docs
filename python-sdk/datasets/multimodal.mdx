@@ -1,0 +1,80 @@
+---
+title: "Multimodal Datasets"
+description: "Attach images, audio, video, and media URLs to dataset rows"
+---
+
+## Supported multimodal helpers
+
+The `Dataset` class provides:
+
+- `add_image(row_index, column_name, image_path)`
+- `add_audio(row_index, column_name, audio_path)`
+- `add_video(row_index, column_name, video_path)`
+- `add_media_url(row_index, column_name, media_url, media_type)`
+
+## Build a multimodal dataset
+
+```python
+import zeroeval as ze
+
+ze.init()
+
+ds = ze.Dataset(
+    "medical-xray",
+    data=[{"row_id": "p001", "symptoms": "Dry cough", "expected_keywords": "pneumonia"}],
+    description="Symptoms with chest imaging",
+)
+
+ds.add_image(0, "chest_xray", "./assets/p001.jpg")
+ds.add_audio(0, "doctor_note_audio", "./assets/p001.wav")
+ds.add_media_url(
+    0,
+    "external_reference",
+    "https://example.com/reference/p001.jpg",
+    media_type="image",
+)
+
+ds.push()
+```
+
+## What gets stored
+
+- File-based helpers encode content as data URIs (`data:<mime>;base64,...`)
+- URL-based helper stores the URL directly
+
+This lets task code consume a consistent row schema regardless of data origin.
+
+## Use multimodal fields in tasks
+
+```python
+@ze.task(outputs=["diagnosis"])
+def diagnose(row):
+    # row.chest_xray may be a data URI string
+    # row.external_reference may be a URL string
+    result = call_model(
+        symptoms=row.symptoms,
+        image=row.chest_xray,
+    )
+    return {"diagnosis": result}
+```
+
+## Validation rules
+
+<AccordionGroup>
+  <Accordion title="Image extensions" icon="image">
+    Allowed: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`
+  </Accordion>
+  <Accordion title="Audio extensions" icon="volume-high">
+    Allowed: `.mp3`, `.wav`, `.ogg`, `.m4a`
+  </Accordion>
+  <Accordion title="Video extensions" icon="film">
+    Allowed: `.mp4`, `.webm`, `.mov`
+  </Accordion>
+  <Accordion title="Media URL types" icon="link">
+    Allowed `media_type`: `image`, `audio`, `video`
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  Multimodal assets can be large. Start with small batches and validate model input formatting before scaling up.
+</Warning>

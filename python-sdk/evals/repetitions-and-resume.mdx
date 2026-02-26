@@ -1,0 +1,72 @@
+---
+title: "Repetitions and Resume"
+description: "Repeat runs for uncertainty and resume interrupted executions safely"
+---
+
+## Repeat a run
+
+Use `run.repeat(n)` to execute the same run configuration multiple times.
+
+```python
+base_run = dataset.eval(predict, workers=8)
+base_run = base_run.score([exact_match, accuracy], column_map=...)
+
+run_collection = base_run.repeat(5)
+all_runs = run_collection.to_list()
+```
+
+Each repeated run:
+
+- Reuses the same task
+- Shares the same backend run id context
+- Can inherit evaluation plans
+
+## Run-level metrics over repeated runs
+
+```python
+@ze.evaluation(mode="run", outputs=["accuracy_mean", "accuracy_n"])
+def accuracy_over_repeats(all_runs):
+    vals = [r.metrics["accuracy"] for r in all_runs if "accuracy" in r.metrics]
+    return {
+        "accuracy_mean": (sum(vals) / len(vals)) if vals else 0.0,
+        "accuracy_n": len(vals),
+    }
+
+aggregate = all_runs[0]
+aggregate.run_metrics([accuracy_over_repeats], all_runs=all_runs)
+print(aggregate.metrics)
+```
+
+## Resume interrupted runs
+
+Resume from an existing run and skip already completed rows:
+
+```python
+resumed = base_run.resume(
+    resume=ze.ResumeConfig(mode="force", skip_completed=True),
+)
+```
+
+You can also provide resume behavior in initial `dataset.eval(...)` calls.
+
+## Resume modes
+
+<Tabs>
+  <Tab title="auto">
+    Attempt resume when possible. Safe default for most workflows.
+  </Tab>
+  <Tab title="force">
+    Explicitly enforce resume behavior. Best when you know prior results exist.
+  </Tab>
+  <Tab title="fresh">
+    Ignore previous progress and execute as a clean run.
+  </Tab>
+</Tabs>
+
+## Requirements for skip-completed
+
+When `skip_completed=True`, each row needs stable identity (`row_id` or `id`) so the SDK can detect already-finished rows.
+
+<Warning>
+  If rows do not include stable identifiers, resume with skip-completed may fail or behave unexpectedly.
+</Warning>

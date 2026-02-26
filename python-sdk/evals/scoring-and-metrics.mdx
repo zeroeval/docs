@@ -1,0 +1,81 @@
+---
+title: "Scoring and Metrics"
+description: "Use row, column, and run-level evaluations with explicit column mapping"
+---
+
+## Evaluation modes
+
+<Tabs>
+  <Tab title="Row">
+    Row evaluations run once per row and usually produce per-row score columns.
+
+    ```python
+    @ze.evaluation(mode="row", outputs=["exact_match"])
+    def exact_match(row, answer_col, prediction_col):
+        return {"exact_match": int(answer_col == prediction_col)}
+    ```
+  </Tab>
+  <Tab title="Column">
+    Column evaluations aggregate over rows in a single run.
+
+    ```python
+    @ze.evaluation(mode="column", outputs=["accuracy"])
+    def accuracy(exact_match_col):
+        total = len(exact_match_col)
+        return {"accuracy": (sum(exact_match_col) / total) if total else 0.0}
+    ```
+  </Tab>
+  <Tab title="Run">
+    Run evaluations aggregate across repeated runs.
+
+    ```python
+    @ze.evaluation(mode="run", outputs=["accuracy_mean"])
+    def accuracy_mean(all_runs):
+        values = [r.metrics["accuracy"] for r in all_runs if "accuracy" in r.metrics]
+        return {"accuracy_mean": (sum(values) / len(values)) if values else 0.0}
+    ```
+  </Tab>
+</Tabs>
+
+## Column mapping
+
+Use `column_map` to bind evaluator function args to columns:
+
+```python
+run = run.score(
+    [exact_match, accuracy],
+    column_map={
+        "exact_match": {
+            "answer_col": "answer",
+            "prediction_col": "prediction",
+        },
+        "accuracy": {"exact_match_col": "exact_match"},
+    },
+)
+```
+
+<Warning>
+  Required evaluator args must be mapped correctly. The SDK validates mappings and raises errors for unknown/missing columns.
+</Warning>
+
+## `score()` vs `eval()`
+
+- `run.score(...)` is an alias of `run.eval(...)`
+- Use either style consistently in your codebase
+
+## Metric helpers
+
+`Run` also provides helper APIs:
+
+```python
+run.column_metrics([accuracy])
+run.run_metrics([accuracy_mean], all_runs=repeated_runs)
+```
+
+These helpers enforce mode-specific evaluation usage.
+
+## Output locations
+
+- Per-row outputs are appended to each `run.rows[i]`
+- Aggregate metrics are placed in `run.metrics`
+- Run health summary is available in `run.health`
