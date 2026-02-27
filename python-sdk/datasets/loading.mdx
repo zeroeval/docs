@@ -44,7 +44,8 @@ print(type(top_100))  # Dataset
 ```
 
 <Info>
-  Sliced datasets preserve backend metadata (dataset id/version/subset) when available, so they can still be evaluated and pushed in normal workflows.
+  Sliced datasets preserve backend metadata (dataset id/version/subset) when
+  available, so they can still be evaluated and pushed in normal workflows.
 </Info>
 
 ## Access columns and normalized data
@@ -63,6 +64,7 @@ print(dataset.data)     # row payloads without wrapper metadata
     ```python
     ze.init(api_key="sk_ze_...")
     ```
+
   </Accordion>
   <Accordion title="Dataset not found" icon="magnifying-glass">
     Confirm dataset name and project context (API key/org mapping). Pull uses the project resolved from your API credentials.

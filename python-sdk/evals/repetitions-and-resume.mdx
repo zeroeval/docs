@@ -18,7 +18,7 @@ all_runs = run_collection.to_list()
 Each repeated run:
 
 - Reuses the same task
-- Shares the same backend run id context
+- Shares the same backend eval id context
 - Can inherit evaluation plans
 
 ## Run-level metrics over repeated runs
@@ -58,9 +58,7 @@ You can also provide resume behavior in initial `dataset.eval(...)` calls.
   <Tab title="force">
     Explicitly enforce resume behavior. Best when you know prior results exist.
   </Tab>
-  <Tab title="fresh">
-    Ignore previous progress and execute as a clean run.
-  </Tab>
+  <Tab title="fresh">Ignore previous progress and execute as a clean run.</Tab>
 </Tabs>
 
 ## Requirements for skip-completed
@@ -68,5 +66,6 @@ You can also provide resume behavior in initial `dataset.eval(...)` calls.
 When `skip_completed=True`, each row needs stable identity (`row_id` or `id`) so the SDK can detect already-finished rows.
 
 <Warning>
-  If rows do not include stable identifiers, resume with skip-completed may fail or behave unexpectedly.
+  If rows do not include stable identifiers, resume with skip-completed may fail
+  or behave unexpectedly.
 </Warning>

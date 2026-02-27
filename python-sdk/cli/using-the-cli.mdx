@@ -1,0 +1,106 @@
+---
+title: "Using the CLI"
+description: "Inspect datasets and evals quickly with the ZeroEval CLI"
+---
+
+## Why use the CLI
+
+Use the ZeroEval CLI for fast, read-oriented inspection of datasets and evals without writing Python scripts.
+
+It is especially useful for:
+
+- listing datasets and versions
+- checking eval status and summaries
+- pulling results, scorers, scores, and traces
+- filtering output with query flags (`--where`, `--select`, `--order`)
+
+## Start with help
+
+Always start from help to discover available flags in your installed version:
+
+```bash
+zeroeval --help
+zeroeval datasets --help
+zeroeval evals --help
+```
+
+Then drill into command help:
+
+```bash
+zeroeval datasets rows --help
+zeroeval evals scores --help
+zeroeval evals traces --help
+```
+
+## Most important commands
+
+### Authentication and setup
+
+```bash
+zeroeval setup
+zeroeval auth set --api-key "$ZEROEVAL_API_KEY"
+zeroeval auth show --redact
+```
+
+### Dataset inspection
+
+```bash
+zeroeval datasets list --limit 20
+zeroeval datasets get capital-cities
+zeroeval datasets versions capital-cities
+zeroeval datasets rows capital-cities --subset default --limit 10
+```
+
+### Eval inspection
+
+```bash
+zeroeval evals list --status completed --limit 20
+zeroeval evals get <eval_id>
+zeroeval evals summary <eval_id>
+zeroeval evals results <eval_id> --repetition 1 --limit 50
+zeroeval evals scorers <eval_id>
+zeroeval evals scores <eval_id> <scorer_id> --limit 100
+zeroeval evals traces <eval_id> --spans-limit 500
+```
+
+## Query helpers
+
+Most list/read commands support:
+
+- `--where` (repeatable filters)
+- `--select` (field projection)
+- `--order` (sorting)
+
+Example:
+
+```bash
+zeroeval evals results <eval_id> \
+  --where "has_error==false" \
+  --select "row_id,result.exact_match,trace_id" \
+  --order "row_id:asc"
+```
+
+## Machine-readable output
+
+Use JSON output for scripts and agents:
+
+```bash
+zeroeval --output json evals summary <eval_id>
+```
+
+You can also inspect the CLI command specification:
+
+```bash
+zeroeval spec cli --format markdown
+zeroeval spec command "evals results" --format json
+```
+
+## Agent guidance
+
+If you are using an AI agent:
+
+- always run `--help` before using a command
+- do not assume flags from memory
+- prefer `--output json` for reliable parsing
+- validate command paths with `zeroeval spec command "<path>"`
+

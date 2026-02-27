@@ -45,7 +45,7 @@ run = run.score(
     },
 )
 
-print("run_id:", run.run_id)
+print("eval_id:", run.id)
 print("metrics:", run.metrics)
 print("health:", run.health)
 ```
@@ -57,9 +57,11 @@ print("health:", run.health)
     `dataset.push()` stores the dataset and returns backend-linked metadata.
   </Step>
   <Step title="Task outputs were generated">
-    `dataset.eval(...)` executed `solve` over each row with the requested worker count.
+    `dataset.eval(...)` executed `solve` over each row with the requested worker
+    count.
   </Step>
   <Step title="Evaluations produced scores">
-    Row-level `exact_match` values were added to rows, then `accuracy` was aggregated into `run.metrics`.
+    Row-level `exact_match` values were added to rows, then `accuracy` was
+    aggregated into `run.metrics`.
   </Step>
 </Steps>

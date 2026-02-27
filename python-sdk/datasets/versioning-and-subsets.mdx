@@ -34,13 +34,15 @@ If `subset` is omitted, the SDK attempts default subset resolution based on data
 
 <Steps>
   <Step title="Pin dataset version when benchmarking">
-    For benchmark comparisons over time, prefer `version_number` instead of always pulling latest.
+    For benchmark comparisons over time, prefer `version_number` instead of
+    always pulling latest.
   </Step>
   <Step title="Track subset in experiments">
     Store subset name in run parameters for transparent reporting.
   </Step>
   <Step title="Use stable row identifiers">
-    Include deterministic `row_id` fields to make resume and row comparisons robust.
+    Include deterministic `row_id` fields to make resume and row comparisons
+    robust.
   </Step>
 </Steps>
 
@@ -58,5 +60,6 @@ run = dataset.eval(
 ```
 
 <Tip>
-  Attach dataset version + subset in run `parameters` so dashboards and downstream analysis remain self-describing.
+  Attach dataset version + subset in run `parameters` so dashboards and
+  downstream analysis remain self-describing.
 </Tip>

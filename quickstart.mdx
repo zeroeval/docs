@@ -13,7 +13,8 @@ This quickstart walks through the full path:
 - Execute a run and read metrics
 
 <Info>
-  LLM Stats uses **ZeroEval** as its core evaluation library. In this guide, you are using the same library that powers LLM Stats in production.
+  LLM Stats uses **ZeroEval** as its core evaluation library. In this guide, you
+  are using the same library that powers LLM Stats in production.
 </Info>
 
 <Steps>
@@ -29,6 +30,7 @@ This quickstart walks through the full path:
     import zeroeval as ze
     ze.init()  # reads ZEROEVAL_API_KEY
     ```
+
   </Step>
   <Step title="Create and push a dataset">
     ```python
@@ -45,6 +47,7 @@ This quickstart walks through the full path:
     )
     ds.push()
     ```
+
   </Step>
   <Step title="Define a task and evaluations">
     ```python
@@ -64,6 +67,7 @@ This quickstart walks through the full path:
         total = len(exact_match_col)
         return {"accuracy": (sum(exact_match_col) / total) if total else 0.0}
     ```
+
   </Step>
   <Step title="Run and score">
     ```python
@@ -79,10 +83,11 @@ This quickstart walks through the full path:
         },
     )
 
-    print("run_id:", run.run_id)
+    print("eval_id:", run.id)
     print("metrics:", run.metrics)
     print("health:", run.health)
     ```
+
   </Step>
 </Steps>
 
@@ -94,14 +99,23 @@ This quickstart walks through the full path:
 - `column_map` binds evaluator function args to dataset/run column names.
 
 <CardGroup cols={2}>
-  <Card title="Dataset deep dive" icon="database" href="/python-sdk/datasets/creating">
+  <Card
+    title="Dataset deep dive"
+    icon="database"
+    href="/python-sdk/datasets/creating"
+  >
     Learn creation patterns, loading, versioning, and multimodal data.
   </Card>
-  <Card title="Evals deep dive" icon="chart-line" href="/python-sdk/evals/running-evals">
+  <Card
+    title="Evals deep dive"
+    icon="chart-line"
+    href="/python-sdk/evals/running-evals"
+  >
     Learn execution config, scoring modes, retries, and resume.
   </Card>
 </CardGroup>
 
 <Tip>
-  Prefer deterministic row IDs when you need reliable resume behavior. Include `row_id` in dataset rows whenever possible.
+  Prefer deterministic row IDs when you need reliable resume behavior. Include
+  `row_id` in dataset rows whenever possible.
 </Tip>

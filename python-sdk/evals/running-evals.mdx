@@ -16,11 +16,9 @@ def predict(row):
     return {"prediction": row.answer}
 
 run = dataset.eval(predict, workers=8)
-print(run.run_id)
+print(run.id)
 print(run.health)
 ```
-
-`Dataset.eval(...)` and `Dataset.run(...)` are aliases.
 
 ## Task requirements
 
@@ -94,5 +92,6 @@ run = dataset.eval(
 ```
 
 <Tip>
-  Keep runs self-describing by always storing model name, dataset version, and subset in run parameters.
+  Keep runs self-describing by always storing model name, dataset version, and
+  subset in run parameters.
 </Tip>

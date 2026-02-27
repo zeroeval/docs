@@ -13,6 +13,7 @@ description: "Debug frequent dataset and eval errors quickly"
     import zeroeval as ze
     ze.init(api_key="sk_ze_...")
     ```
+
   </Accordion>
   <Accordion title="Missing API key" icon="key">
     Set `ZEROEVAL_API_KEY` in your environment or pass `api_key` directly to `ze.init(...)`.
@@ -73,5 +74,6 @@ execution = ze.ExecutionConfig(
 ```
 
 <Tip>
-  For production workloads, pair retries with checkpointing so partial progress is persisted during long runs.
+  For production workloads, pair retries with checkpointing so partial progress
+  is persisted during long runs.
 </Tip>

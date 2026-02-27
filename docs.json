@@ -71,6 +71,12 @@
             ]
           },
           {
+            "group": "CLI",
+            "pages": [
+              "python-sdk/cli/using-the-cli"
+            ]
+          },
+          {
             "group": "Examples",
             "pages": [
               "python-sdk/examples/text-eval-end-to-end",

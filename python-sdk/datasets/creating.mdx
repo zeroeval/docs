@@ -23,7 +23,8 @@ dataset = ze.Dataset(
 ```
 
 <Tip>
-  Add a stable `row_id` field whenever possible. It makes resume behavior and row-level tracking much more reliable.
+  Add a stable `row_id` field whenever possible. It makes resume behavior and
+  row-level tracking much more reliable.
 </Tip>
 
 ## Create from CSV
@@ -61,7 +62,8 @@ dataset.delete_row(1)
 ```
 
 <Warning>
-  Row updates by index can change row ordering and row content. Keep this in mind if your downstream logic assumes fixed order.
+  Row updates by index can change row ordering and row content. Keep this in
+  mind if your downstream logic assumes fixed order.
 </Warning>
 
 ## Push to ZeroEval

@@ -14,6 +14,7 @@ description: "Use row, column, and run-level evaluations with explicit column ma
     def exact_match(row, answer_col, prediction_col):
         return {"exact_match": int(answer_col == prediction_col)}
     ```
+
   </Tab>
   <Tab title="Column">
     Column evaluations aggregate over rows in a single run.
@@ -24,6 +25,7 @@ description: "Use row, column, and run-level evaluations with explicit column ma
         total = len(exact_match_col)
         return {"accuracy": (sum(exact_match_col) / total) if total else 0.0}
     ```
+
   </Tab>
   <Tab title="Run">
     Run evaluations aggregate across repeated runs.
@@ -34,6 +36,7 @@ description: "Use row, column, and run-level evaluations with explicit column ma
         values = [r.metrics["accuracy"] for r in all_runs if "accuracy" in r.metrics]
         return {"accuracy_mean": (sum(values) / len(values)) if values else 0.0}
     ```
+
   </Tab>
 </Tabs>
 
@@ -55,7 +58,8 @@ run = run.score(
 ```
 
 <Warning>
-  Required evaluator args must be mapped correctly. The SDK validates mappings and raises errors for unknown/missing columns.
+  Required evaluator args must be mapped correctly. The SDK validates mappings
+  and raises errors for unknown/missing columns.
 </Warning>
 
 ## `score()` vs `eval()`
@@ -65,7 +69,7 @@ run = run.score(
 
 ## Metric helpers
 
-`Run` also provides helper APIs:
+`Eval` also provides helper APIs:
 
 ```python
 run.column_metrics([accuracy])
