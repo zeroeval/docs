@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "willow",
   "name": "LLM Stats",
   "description": "LLM Stats is powered by ZeroEval, the open-source evaluation library built by the LLM Stats team",
   "colors": {
@@ -72,9 +72,7 @@
           },
           {
             "group": "CLI",
-            "pages": [
-              "python-sdk/cli/using-the-cli"
-            ]
+            "pages": ["python-sdk/cli/using-the-cli"]
           },
           {
             "group": "Examples",
@@ -86,20 +84,7 @@
         ]
       }
     ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "SDK on PyPI",
-          "href": "https://pypi.org/project/zeroeval/",
-          "icon": "box-open"
-        },
-        {
-          "anchor": "LLM Stats App",
-          "href": "https://llm-stats.com",
-          "icon": "chart-bar"
-        }
-      ]
-    }
+    "global": {}
   },
   "navbar": {
     "links": [
