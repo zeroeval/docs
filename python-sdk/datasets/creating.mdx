@@ -1,11 +1,32 @@
 ---
 title: "Creating Datasets"
-description: "Create, mutate, and push datasets with the ZeroEval Python SDK"
+description: "Create benchmark datasets from the UI, git, or the Python SDK"
 ---
 
-## Create from Python data
+## Recommended: git or UI
 
-Use `ze.Dataset(name, data=[...])` when your rows already exist in memory.
+For most benchmarks, upload data via **git** or the **CSV importer** in the
+benchmark hub. See [Uploading Data](/python-sdk/datasets/uploading-data) for
+step-by-step instructions.
+
+Git is best for:
+
+- large or versioned datasets
+- including scorer implementations and documentation alongside data
+- reproducible, CI-friendly workflows
+
+The browser editor and CSV importer are best for:
+
+- quick prototypes
+- small manually-curated test sets
+- one-off imports
+
+## SDK-based creation
+
+You can also create and push datasets programmatically from Python. This is
+useful for generating datasets from code or integrating with data pipelines.
+
+### Create from Python data
 
 ```python
 import zeroeval as ze
@@ -27,37 +48,25 @@ dataset = ze.Dataset(
   row-level tracking much more reliable.
 </Tip>
 
-## Create from CSV
-
-You can initialize directly from a CSV path. The dataset name defaults to the CSV filename stem.
+### Create from CSV
 
 ```python
-import zeroeval as ze
-
-ze.init()
-
 dataset = ze.Dataset("/path/to/questions.csv")
 print(dataset.name)  # e.g. "questions"
 print(len(dataset))
 ```
 
-## Modify rows before running evals
+The dataset name defaults to the CSV filename without the extension.
 
-The `Dataset` object supports in-memory row operations.
+### Modify rows
 
 ```python
-# Add rows
 dataset.add_rows(
     [{"row_id": "es", "question": "Capital of Spain?", "answer": "Madrid"}]
 )
 
-# Update one row by index
-dataset.update_row(
-    0,
-    {"question": "Capital city of France?", "answer": "Paris"},
-)
+dataset.update_row(0, {"question": "Capital city of France?", "answer": "Paris"})
 
-# Delete a row by index
 dataset.delete_row(1)
 ```
 
@@ -66,24 +75,21 @@ dataset.delete_row(1)
   mind if your downstream logic assumes fixed order.
 </Warning>
 
-## Push to ZeroEval
-
-Push persists the dataset to the backend and refreshes local rows with backend metadata (including row IDs when available).
+### Push to ZeroEval
 
 ```python
 dataset.push()
 print(dataset.version_id, dataset.version_number)
 ```
 
-Use `create_new_version=True` if you explicitly want a new version on push:
+After push, you can pin future runs to that version number:
 
 ```python
-dataset.push(create_new_version=True)
+latest = ze.Dataset.pull("capital-cities")
+pinned = ze.Dataset.pull("capital-cities", version_number=dataset.version_number)
 ```
 
-## Validate shape quickly
-
-Useful helpers before running tasks:
+### Validate shape
 
 ```python
 print(dataset.columns)  # sorted list of column names

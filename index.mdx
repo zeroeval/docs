@@ -21,11 +21,11 @@ description: "LLM Stats is powered by ZeroEval, our in-house evaluation library"
 
 <CardGroup cols={2}>
   <Card
-    title="Create datasets"
-    icon="database"
-    href="/python-sdk/datasets/creating"
+    title="Upload benchmark data"
+    icon="upload"
+    href="/python-sdk/datasets/uploading-data"
   >
-    Build datasets from Python lists or CSV files and push them to ZeroEval.
+    Add data via git, CSV import, or the browser editor.
   </Card>
   <Card
     title="Load and inspect data"
@@ -44,6 +44,13 @@ description: "LLM Stats is powered by ZeroEval, our in-house evaluation library"
   >
     Add row, column, and run-level evaluations for robust measurement.
   </Card>
+  <Card
+    title="Inspect signals and traces"
+    icon="waveform-lines"
+    href="/python-sdk/evals/signals-and-traces"
+  >
+    Emit runtime signals during execution and inspect them through traces.
+  </Card>
 </CardGroup>
 
 ## Recommended Path
@@ -56,8 +63,9 @@ description: "LLM Stats is powered by ZeroEval, our in-house evaluation library"
   <Step title="Complete the first eval">
     Run the walkthrough in [`/python-sdk/quickstart`](/python-sdk/quickstart).
   </Step>
-  <Step title="Master datasets">
-    Learn creation, loading, versioning/subsets, and multimodal data handling.
+  <Step title="Upload benchmark data">
+    Push data via git, import CSVs, or use the browser editor. Learn about
+    subsets, versioning, and the recommended repository layout.
   </Step>
   <Step title="Productionize eval execution">
     Add scoring, repetition, and resume/reliability controls.

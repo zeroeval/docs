@@ -5,6 +5,9 @@ description: "Use row, column, and run-level evaluations with explicit column ma
 
 ## Evaluation modes
 
+Use evaluation functions to turn task outputs into row scores and aggregate
+metrics.
+
 <Tabs>
   <Tab title="Row">
     Row evaluations run once per row and usually produce per-row score columns.
@@ -40,6 +43,24 @@ description: "Use row, column, and run-level evaluations with explicit column ma
   </Tab>
 </Tabs>
 
+## How inputs bind
+
+Use this mental model when writing evaluation functions:
+
+- **Row evaluations** receive one `row` plus any mapped scalar values.
+- **Column evaluations** receive mapped column lists across the whole run.
+- **Run evaluations** receive `all_runs` after repetitions.
+
+```python
+@ze.evaluation(mode="row", outputs=["exact_match"])
+def exact_match(row, gold_col, pred_col):
+    return {"exact_match": int(gold_col == pred_col)}
+
+@ze.evaluation(mode="column", outputs=["accuracy"])
+def accuracy(exact_match_col):
+    return {"accuracy": sum(exact_match_col) / len(exact_match_col)}
+```
+
 ## Column mapping
 
 Use `column_map` to bind evaluator function args to columns:
@@ -49,8 +70,8 @@ run = run.score(
     [exact_match, accuracy],
     column_map={
         "exact_match": {
-            "answer_col": "answer",
-            "prediction_col": "prediction",
+            "gold_col": "answer",
+            "pred_col": "prediction",
         },
         "accuracy": {"exact_match_col": "exact_match"},
     },
@@ -65,7 +86,17 @@ run = run.score(
 ## `score()` vs `eval()`
 
 - `run.score(...)` is an alias of `run.eval(...)`
-- Use either style consistently in your codebase
+- In the docs, prefer `run.score(...)` for clarity
+
+## Signals vs metrics
+
+Signals are not scores.
+
+- Emit **signals** during task execution for runtime facts like
+  `retrieved_doc_count`, `phase`, or `tests_failed_after`.
+- Compute **metrics** after execution with row/column/run evaluations.
+
+This separation keeps execution facts reusable across multiple scorers.
 
 ## Metric helpers
 
@@ -80,6 +111,6 @@ These helpers enforce mode-specific evaluation usage.
 
 ## Output locations
 
-- Per-row outputs are appended to each `run.rows[i]`
+- Task outputs and row scores are appended to each `run.rows[i]`
 - Aggregate metrics are placed in `run.metrics`
-- Run health summary is available in `run.health`
+- The execution summary is available in `run.health`

@@ -1,0 +1,124 @@
+---
+title: "Signals and Traces"
+description: "Emit runtime signals during task execution and inspect them through traces"
+---
+
+## Signals vs scores
+
+Signals are runtime observations emitted while a task is executing.
+
+- Use **signals** for facts about execution:
+  - `tests_failed = 3`
+  - `retrieval_hit = true`
+  - `phase = "rerank"`
+- Use **scores** for judgments computed after execution:
+  - exact match
+  - faithfulness
+  - pass rate
+
+Signals complement row/column/run evaluations. They do not replace them.
+
+## Outputs vs signals vs scores
+
+- Return task **outputs** from your `@ze.task(...)` dictionary.
+- Emit **signals** during execution for runtime observations.
+- Compute **scores** after execution with evaluation functions.
+
+```python
+@ze.task(outputs=["prediction"])
+def answer(row):
+    ze.emit_signal("phase", "retrieve")
+    docs = retrieve(row.question)
+    ze.emit_signal("retrieved_doc_count", len(docs))
+    prediction = generate(row.question, docs)
+    return {"prediction": prediction}
+```
+
+In this example:
+
+- `prediction` is a task output
+- `phase` and `retrieved_doc_count` are emitted signals
+- exact match or faithfulness would be computed later as scores
+
+## Emit signals in a task
+
+```python
+import zeroeval as ze
+
+@ze.task(outputs=["answer"])
+def answer_question(row):
+    ze.emit_signal("phase", "retrieve")
+    docs = retrieve_docs(row.question)
+    ze.emit_signal("retrieved_doc_count", len(docs))
+    ze.emit_signal("retrieval_hit", bool(docs))
+
+    answer = generate_answer(row.question, docs)
+    ze.emit_signal("phase", "generate")
+    return {"answer": answer}
+```
+
+`ze.emit_signal(...)` attaches to the current task span by default. If no active
+span exists, it falls back to the current trace.
+
+## What gets persisted
+
+When tasks run through `dataset.eval(...)`, ZeroEval creates a task span for each
+row execution. Emitted signals are attached to that span and flushed with the
+normal tracing pipeline.
+
+This means signals inherit all of the benefits of tracing:
+
+- per-row trace linkage
+- span-level inspection
+- compatibility with screenshots, attachments, and tags
+
+## Surface signals in the app
+
+Signals appear in trace-aware evaluation views:
+
+- row detail panels can show emitted signals for a specific result
+- trace views can show which span emitted each signal
+- eval detail views can summarize common signals across a run
+
+## Signals, feedback, and judges
+
+- **signals** are runtime facts emitted by the task or system
+- **feedback** is corrective human/user input
+- **judge evaluations** are automated judgments produced by judge automations
+
+Keep these concepts separate:
+
+- emit signals during execution
+- compute scores after execution
+- use feedback to correct or supervise model behavior
+
+## Common patterns
+
+### RAG
+
+```python
+ze.emit_signal("retrieval_hit", hit)
+ze.emit_signal("retrieved_doc_count", len(docs))
+ze.emit_signal("retrieval_strategy", "hybrid")
+```
+
+### Code repair
+
+```python
+ze.emit_signal("tests_failed_before", before)
+ze.emit_signal("tests_failed_after", after)
+ze.emit_signal("lint_passed", lint_ok)
+```
+
+### Customer support
+
+```python
+ze.emit_signal("verified_identity", verified)
+ze.emit_signal("policy_violation", violated_policy)
+ze.emit_signal("escalated_to_human", escalated)
+```
+
+## Recommended practice
+
+Emit the facts you may want to score later, then let evaluators decide how to
+turn those facts into row/column/run metrics.

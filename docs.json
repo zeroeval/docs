@@ -55,6 +55,7 @@
           {
             "group": "Datasets",
             "pages": [
+              "python-sdk/datasets/uploading-data",
               "python-sdk/datasets/creating",
               "python-sdk/datasets/loading",
               "python-sdk/datasets/versioning-and-subsets",
@@ -66,6 +67,7 @@
             "pages": [
               "python-sdk/evals/running-evals",
               "python-sdk/evals/scoring-and-metrics",
+              "python-sdk/evals/signals-and-traces",
               "python-sdk/evals/repetitions-and-resume",
               "python-sdk/evals/common-failures"
             ]

@@ -22,6 +22,7 @@ dataset.push()
 @ze.task(outputs=["prediction"])
 def solve(row):
     # Replace with real model call.
+    ze.emit_signal("phase", "solve")
     return {"prediction": row.answer}
 
 @ze.evaluation(mode="row", outputs=["exact_match"])
@@ -50,6 +51,30 @@ print("metrics:", run.metrics)
 print("health:", run.health)
 ```
 
+## Core primitives
+
+```python
+print(type(dataset).__name__)  # Dataset
+print(type(run).__name__)      # Eval
+```
+
+- `Dataset` stores rows and backend version metadata.
+- `@ze.task(...)` defines the outputs generated for each row.
+- `run = dataset.eval(...)` executes the task and returns an `Eval` object.
+- `run.score(...)` applies evaluation functions and writes aggregate metrics into
+  `run.metrics`.
+
+## Inspect the returned run
+
+```python
+run = dataset.eval(solve)
+
+print(run.id)         # backend eval ID
+print(run.rows[0])    # task outputs live on rows
+print(run.metrics)    # aggregate metrics live here
+print(run.health)     # execution summary lives here
+```
+
 ## What happened
 
 <Steps>
@@ -58,10 +83,38 @@ print("health:", run.health)
   </Step>
   <Step title="Task outputs were generated">
     `dataset.eval(...)` executed `solve` over each row with the requested worker
-    count.
+    count and returned a run object (`Eval`).
+  </Step>
+  <Step title="Runtime signals were captured">
+    `ze.emit_signal(...)` attached execution facts to the task trace so they can
+    be inspected later without turning them into scores immediately.
   </Step>
   <Step title="Evaluations produced scores">
     Row-level `exact_match` values were added to rows, then `accuracy` was
     aggregated into `run.metrics`.
   </Step>
 </Steps>
+
+## One mental model for scoring
+
+- A **row evaluation** receives one row plus any mapped scalar values.
+- A **column evaluation** receives lists of values across all rows.
+- A **run evaluation** receives `all_runs` after you repeat a run.
+
+```python
+@ze.evaluation(mode="row", outputs=["exact_match"])
+def exact_match(row, gold_col, pred_col):
+    return {"exact_match": int(gold_col == pred_col)}
+
+@ze.evaluation(mode="column", outputs=["accuracy"])
+def accuracy(exact_match_col):
+    return {"accuracy": sum(exact_match_col) / len(exact_match_col)}
+
+run = run.score(
+    [exact_match, accuracy],
+    column_map={
+        "exact_match": {"gold_col": "answer", "pred_col": "prediction"},
+        "accuracy": {"exact_match_col": "exact_match"},
+    },
+)
+```

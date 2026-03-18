@@ -21,6 +21,13 @@ Optionally load a specific version number:
 dataset_v2 = ze.Dataset.pull("capital-cities", version_number=2)
 ```
 
+If the dataset defines named subsets, you can pull one directly:
+
+```python
+diamond = ze.Dataset.pull("gpqa", subset="diamond")
+print(len(diamond))
+```
+
 ## Iterate over rows
 
 Rows are yielded as `DotDict` objects, so both key and dot access are possible.
@@ -53,6 +60,19 @@ print(type(top_100))  # Dataset
 ```python
 print(dataset.columns)  # union of all row keys (excluding internal row_id)
 print(dataset.data)     # row payloads without wrapper metadata
+```
+
+## Minimal versioning example
+
+```python
+dataset = ze.Dataset(
+    "qa-demo",
+    data=[{"row_id": "q1", "question": "6 * 7", "answer": "42"}],
+)
+dataset.push()
+
+latest = ze.Dataset.pull("qa-demo")
+pinned = ze.Dataset.pull("qa-demo", version_number=dataset.version_number)
 ```
 
 ## Common loading errors

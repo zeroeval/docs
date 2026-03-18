@@ -57,6 +57,9 @@ The SDK validates mappings and raises clear errors for unknown columns.
 
 Without `row_id` (or `id`), row-level resume tracking cannot be guaranteed.
 
+`repeat(n)` also works best when rows have stable identity, because repeated runs
+and resumed runs are easier to compare by `row_id`.
+
 ## Reliability tuning
 
 Use these controls for flaky providers:

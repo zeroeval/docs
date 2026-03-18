@@ -19,6 +19,23 @@ To run against a known version:
 dataset = ze.Dataset.pull("capital-cities", version_number=3)
 ```
 
+## One compact example
+
+```python
+dataset = ze.Dataset(
+    "qa-demo",
+    data=[{"row_id": "q1", "question": "6 * 7", "answer": "42"}],
+)
+dataset.push()
+
+latest = ze.Dataset.pull("qa-demo")
+pinned = ze.Dataset.pull("qa-demo", version_number=dataset.version_number)
+subset = ze.Dataset.pull("gpqa", subset="diamond")
+
+print(dataset.version_number)
+print(len(latest), len(pinned), len(subset))
+```
+
 ## Subset pulls
 
 If your dataset includes named subsets, pull only the subset you want:
@@ -28,7 +45,16 @@ diamond = ze.Dataset.pull("gpqa", subset="diamond")
 print(len(diamond))
 ```
 
-If `subset` is omitted, the SDK attempts default subset resolution based on dataset metadata.
+If `subset` is omitted, the SDK resolves the default subset automatically:
+
+1. The benchmark's configured default subset
+2. A file named `data/default.parquet`
+3. If there is only one subset, that subset
+4. The first subset alphabetically
+
+Subsets are detected from Parquet files in the `data/` directory. Each file
+`data/<name>.parquet` becomes a subset named `<name>`. See
+[Uploading Data](/python-sdk/datasets/uploading-data) for the full layout.
 
 ## Reproducibility checklist
 

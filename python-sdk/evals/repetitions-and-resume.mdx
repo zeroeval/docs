@@ -6,6 +6,7 @@ description: "Repeat runs for uncertainty and resume interrupted executions safe
 ## Repeat a run
 
 Use `run.repeat(n)` to execute the same run configuration multiple times.
+`n` is the **total number of runs**, including the base run.
 
 ```python
 base_run = dataset.eval(predict, workers=8)
@@ -14,6 +15,8 @@ base_run = base_run.score([exact_match, accuracy], column_map=...)
 run_collection = base_run.repeat(5)
 all_runs = run_collection.to_list()
 ```
+
+In this example, `all_runs` contains 5 total runs, not 5 additional runs.
 
 Each repeated run:
 
@@ -36,6 +39,9 @@ aggregate = all_runs[0]
 aggregate.run_metrics([accuracy_over_repeats], all_runs=all_runs)
 print(aggregate.metrics)
 ```
+
+Run-level metrics only make sense after repeated runs because they aggregate over
+`all_runs`, not over rows from a single run.
 
 ## Resume interrupted runs
 
@@ -69,3 +75,11 @@ When `skip_completed=True`, each row needs stable identity (`row_id` or `id`) so
   If rows do not include stable identifiers, resume with skip-completed may fail
   or behave unexpectedly.
 </Warning>
+
+```python
+# Good: stable row identity
+{"row_id": "q1", "question": "...", "answer": "..."}
+
+# Risky: no stable row identity
+{"question": "...", "answer": "..."}
+```

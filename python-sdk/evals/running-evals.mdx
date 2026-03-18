@@ -20,6 +20,15 @@ print(run.id)
 print(run.health)
 ```
 
+The object returned by `dataset.eval(...)` is a run (`Eval`):
+
+```python
+print(type(run).__name__)  # Eval
+print(run.id)              # backend eval ID
+print(run.rows[0])         # task outputs for the first row
+print(run.metrics)         # aggregate metrics after scoring
+```
+
 ## Task requirements
 
 `@ze.task` functions must:
@@ -35,6 +44,21 @@ def predict(row):
 ```
 
 If required outputs are missing, the SDK raises a validation error.
+
+## Task outputs vs signals
+
+- Return task **outputs** in the dictionary from your `@ze.task(...)`.
+- Emit **signals** during execution for runtime facts you may want to inspect or
+  score later.
+
+```python
+@ze.task(outputs=["prediction"])
+def predict(row):
+    ze.emit_signal("phase", "retrieve")
+    docs = retrieve(row.question)
+    ze.emit_signal("retrieved_doc_count", len(docs))
+    return {"prediction": call_model(row.question, docs)}
+```
 
 ## Execution controls
 
@@ -76,6 +100,24 @@ run = dataset.eval(
 
 Checkpointing reduces work lost on interruption and supports strong resume behavior.
 
+## Emit runtime signals
+
+Tasks can emit runtime observations while they execute:
+
+```python
+@ze.task(outputs=["prediction"])
+def predict(row):
+    ze.emit_signal("phase", "retrieve")
+    docs = retrieve(row.question)
+    ze.emit_signal("retrieved_doc_count", len(docs))
+    ze.emit_signal("retrieval_hit", bool(docs))
+    return {"prediction": call_model(row.question, docs)}
+```
+
+Signals are attached to the current task span by default and can later be
+inspected in trace-aware eval views. Use signals for execution facts, then use
+evaluations to convert those facts into scores.
+
 ## Attach run metadata
 
 Use `parameters` to persist contextual metadata with the run:
@@ -95,3 +137,15 @@ run = dataset.eval(
   Keep runs self-describing by always storing model name, dataset version, and
   subset in run parameters.
 </Tip>
+
+## Health and execution summary
+
+After execution, inspect `run.health` to understand whether the run completed
+cleanly:
+
+```python
+print(run.health["status"])
+print(run.health["success_count"])
+print(run.health["error_count"])
+print(run.health["retry_success_rate"])
+```

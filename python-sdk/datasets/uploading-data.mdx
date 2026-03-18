@@ -1,0 +1,219 @@
+---
+title: "Uploading Data"
+description: "Add benchmark data via git, CSV import, or the browser editor"
+---
+
+## Overview
+
+There are three ways to add data to a benchmark:
+
+1. **Git** — clone, add files, push. Best for version-controlled workflows, large
+   datasets, and including benchmark implementation files alongside data.
+2. **CSV import** — upload a CSV file or paste a URL from the benchmark hub UI.
+3. **Browser editor** — create rows and columns manually in the Data tab.
+
+Git is the recommended approach for production benchmarks.
+
+<Info>
+  You can also push data programmatically with the Python SDK using
+  `ze.Dataset(...).push()`, but git is preferred for most workflows because it
+  handles large files, versioning, and non-data files like scorer implementations.
+</Info>
+
+## Git (recommended)
+
+Every benchmark has a git repository. Clone it, add your data files, and push.
+
+### 1. Clone the repository
+
+```bash
+git clone https://git.llm-stats.com/<org>/<benchmark-slug>.git
+cd <benchmark-slug>
+```
+
+Replace `<org>` with your organization slug and `<benchmark-slug>` with the
+benchmark name. You can find the clone URL on the benchmark's Files tab.
+
+Authentication uses your ZeroEval API key as the git password:
+
+```bash
+git clone https://<anything>:<your-api-key>@git.llm-stats.com/<org>/<benchmark-slug>.git
+```
+
+### 2. Add data files
+
+Place data files in a `data/` directory. Each file becomes a **subset**.
+
+```
+data/
+├── default.parquet    → subset "default"
+├── easy.parquet       → subset "easy"
+└── hard.parquet       → subset "hard"
+```
+
+<Warning>
+  Only `.parquet` files inside `data/` are treated as dataset subsets.
+  CSV and JSONL files are stored but not auto-detected as subsets.
+</Warning>
+
+If you only have one file, name it `data/default.parquet`. The platform will use
+it as the default subset automatically.
+
+### 3. Add non-data files (optional)
+
+You can include any other files in the repository. Common additions:
+
+```
+data/
+├── default.parquet
+├── hard.parquet
+scorers/
+├── exact_match.py
+├── faithfulness.py
+README.md
+```
+
+- `scorers/*.py` files are auto-detected as scorer implementations and shown in
+  the benchmark config.
+- `README.md` is displayed on the benchmark overview page.
+- Any other files (scripts, configs, notebooks) are stored and browsable in the
+  Files tab.
+
+### 4. Commit and push
+
+```bash
+git add .
+git commit -m "Add benchmark data"
+git push
+```
+
+Each push creates a new dataset version. The platform automatically:
+
+- indexes all files
+- detects subsets from `data/*.parquet`
+- detects scorers from `scorers/*.py`
+- updates the schema and column types from the Parquet Arrow metadata
+
+### Converting CSV to Parquet
+
+If your data is in CSV format, convert it to Parquet before pushing:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("questions.csv")
+df.to_parquet("data/default.parquet", index=False)
+```
+
+Or with PyArrow directly:
+
+```python
+import pyarrow.csv as pcsv
+import pyarrow.parquet as pq
+
+table = pcsv.read_csv("questions.csv")
+pq.write_table(table, "data/default.parquet")
+```
+
+### Multiple subsets
+
+Use multiple Parquet files to create named subsets:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("questions.csv")
+
+easy = df[df["difficulty"] == "easy"]
+hard = df[df["difficulty"] == "hard"]
+
+easy.to_parquet("data/easy.parquet", index=False)
+hard.to_parquet("data/hard.parquet", index=False)
+```
+
+Then in the SDK:
+
+```python
+easy_ds = ze.Dataset.pull("my-benchmark", subset="easy")
+hard_ds = ze.Dataset.pull("my-benchmark", subset="hard")
+```
+
+## CSV import (UI)
+
+From the benchmark's **Data** tab, click **Import CSV** to upload a file or fetch
+from a URL.
+
+The importer:
+
+- parses CSV headers and infers column types
+- lets you enable/disable individual columns
+- previews the first 10 rows before importing
+- appends rows to the current subset
+
+This is useful for quick one-off imports. For repeatable workflows, use git.
+
+## Browser editor (UI)
+
+From the benchmark's **Data** tab, click **Create in UI** to open a spreadsheet
+editor where you can:
+
+- add and remove columns
+- add rows one at a time
+- edit cell values inline
+- commit changes as a new version
+
+This is useful for small benchmarks or manual test case curation.
+
+## Subset detection
+
+The platform auto-detects subsets from the `data/` directory:
+
+| File path | Subset name |
+|-----------|-------------|
+| `data/default.parquet` | `default` |
+| `data/easy.parquet` | `easy` |
+| `data/hard.parquet` | `hard` |
+| `data/gpqa_diamond.parquet` | `gpqa_diamond` |
+
+The default subset is resolved in this order:
+
+1. The benchmark's configured default subset
+2. A file named `default.parquet`
+3. If there is only one subset, that subset
+4. The first subset alphabetically
+
+## Schema and columns
+
+Column names and types are read from Parquet Arrow metadata. Supported column
+types:
+
+- `string` (text)
+- `int64` / `int32` (integer)
+- `float64` / `float32` (float)
+- `bool` (boolean)
+
+The primary key column is auto-detected:
+
+1. The benchmark's configured primary key
+2. A column named `id`
+3. The first column ending in `_id`
+4. The first column
+
+Include a stable `row_id` or `id` column whenever possible. It makes resume,
+row-level comparison, and version diffing more reliable.
+
+## Recommended layout
+
+A well-structured benchmark repository looks like this:
+
+```
+my-benchmark/
+├── data/
+│   ├── default.parquet     # main evaluation subset
+│   ├── easy.parquet        # optional difficulty split
+│   └── hard.parquet
+├── scorers/
+│   └── exact_match.py      # scorer implementation
+├── README.md               # benchmark description
+└── requirements.txt        # optional dependencies
+```
