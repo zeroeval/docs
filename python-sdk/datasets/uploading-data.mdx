@@ -5,22 +5,62 @@ description: "Add benchmark data via git, CSV import, or the browser editor"
 
 ## Overview
 
-There are three ways to add data to a benchmark:
+There are four ways to add data to a benchmark:
 
-1. **Git** — clone, add files, push. Best for version-controlled workflows, large
-   datasets, and including benchmark implementation files alongside data.
-2. **CSV import** — upload a CSV file or paste a URL from the benchmark hub UI.
-3. **Browser editor** — create rows and columns manually in the Data tab.
+1. **Large file upload** — start an upload session, upload Parquet files directly
+   to storage, then finalize and let the platform index the dataset
+   asynchronously. This is the recommended path for large parquet datasets.
+2. **Git** — clone, add files, push. Best for metadata-heavy workflows, smaller
+   repositories, and keeping benchmark source files alongside data.
+3. **CSV import** — upload a CSV file or paste a URL from the benchmark hub UI.
+4. **Browser editor** — create rows and columns manually in the Data tab.
 
-Git is the recommended approach for production benchmarks.
+For large dataset payloads, prefer the upload flow over a single large Git push.
 
 <Info>
   You can also push data programmatically with the Python SDK using
-  `ze.Dataset(...).push()`, but git is preferred for most workflows because it
-  handles large files, versioning, and non-data files like scorer implementations.
+  `ze.Dataset(...).push()`, but resilient upload sessions are the preferred path
+  for very large parquet files. Git remains a good option for smaller benchmark
+  repos and non-data files like scorer implementations.
 </Info>
 
-## Git (recommended)
+## Large File Upload (recommended for large parquet datasets)
+
+Use the upload flow when a benchmark includes large parquet subsets or when you
+want resumable uploads that do not depend on one long-lived Git request.
+
+### 1. Create an upload session
+
+Create a session for the files you plan to upload. The session records:
+
+- file paths
+- expected sizes
+- checksums
+- progress
+
+### 2. Upload file parts directly to storage
+
+The backend returns presigned multipart upload URLs. Upload each file in parts,
+retry failed parts if needed, and complete each file when all parts are present.
+
+### 3. Finalize the session
+
+Finalizing the session tells the platform to verify the uploaded files and start
+dataset indexing.
+
+### 4. Wait for indexing
+
+The session and dataset move through these states:
+
+- `received`
+- `uploading`
+- `indexing`
+- `ready`
+- `failed`
+
+The dataset becomes usable when the status reaches `ready`.
+
+## Git
 
 Every benchmark has a git repository. Clone it, add your data files, and push.
 
@@ -87,7 +127,9 @@ git commit -m "Add benchmark data"
 git push
 ```
 
-Each push creates a new dataset version. The platform automatically:
+`git push` now acknowledges the repo update first, then indexes the dataset asynchronously in the background. After pushing, inspect status with the benchmark page or CLI while the ingest moves through `received`, `indexing`, `ready`, or `failed`.
+
+Each successful ingest creates a new dataset version. The platform automatically:
 
 - indexes all files
 - detects subsets from `data/*.parquet`
